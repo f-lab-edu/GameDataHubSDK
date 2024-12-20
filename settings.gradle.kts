@@ -1,5 +1,5 @@
 plugins {
-	id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
-rootProject.name = "dummy-data-generator"
-
+rootProject.name = "gameDataHubSDK"
+include("dummy")

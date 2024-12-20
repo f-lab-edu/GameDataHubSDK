@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.0.21"
 }
 
-group = "io.github.gamedatatools"
+group = "com.gamedatahub.sdk"
 version = "1.0-SNAPSHOT"
 
 repositories {
