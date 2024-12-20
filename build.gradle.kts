@@ -10,8 +10,6 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.javafaker:javafaker:1.0.2")
-
     testImplementation(kotlin("test"))
 }
 
