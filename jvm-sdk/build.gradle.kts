@@ -1,18 +1,17 @@
+group = "com.gamedatahub.sdk.jvm"
+version = "1.0-SNAPSHOT"
+
+
 dependencies {
     val jacksonVersion: String by project
 
-    implementation(project(":jvm-sdk"))
     implementation(project(":shared-sdk"))
 
-    // HTTP client
+    // http client
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Serialize
     implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-
-    // Testing
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("com.squareup.okhttp3:mockwebserver:5.0.0-alpha.11")
 }
