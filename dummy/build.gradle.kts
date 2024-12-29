@@ -13,5 +13,6 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
     // Testing
+    testImplementation("io.mockk:mockk:1.13.5")
     testImplementation("com.squareup.okhttp3:mockwebserver:5.0.0-alpha.11")
 }
