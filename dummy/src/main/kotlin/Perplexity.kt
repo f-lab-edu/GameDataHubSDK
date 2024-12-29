@@ -33,9 +33,9 @@ class Perplexity(
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 println("Error Response: ${response.body?.string()}")
-                throw IOException("Unexpected code $response")
+                throw IOException("Unexpected code ${response.code}")
             }
-            val responseBody = response.body?.string() ?: throw IOException("Empty response body")
+            val responseBody = response.body?.string()
             val apiResponse = objectMapper.readValue(responseBody, ApiResponse::class.java)
 
             val content = apiResponse.choices.firstOrNull()?.message?.content ?: "[]"
