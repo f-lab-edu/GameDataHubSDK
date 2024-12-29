@@ -1,10 +1,8 @@
 
-package com.sharedsdk.datacollection
+package com.gamedatahub.datacollection
 
-import com.sharedsdk.serialization.JsonSerializer
-import com.sharedsdk.network.NetworkClient
-import com.sharedsdk.serialization.KotlinSerializer
-import kotlinx.serialization.Serializable
+import com.gamedatahub.serialization.JsonSerializer
+import com.gamedatahub.network.NetworkClient
 
 
 class DataCollector<T>(

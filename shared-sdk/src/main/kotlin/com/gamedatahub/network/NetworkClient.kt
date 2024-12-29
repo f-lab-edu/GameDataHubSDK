@@ -1,4 +1,4 @@
-package com.sharedsdk.network
+package com.gamedatahub.network
 
 interface NetworkClient {
 

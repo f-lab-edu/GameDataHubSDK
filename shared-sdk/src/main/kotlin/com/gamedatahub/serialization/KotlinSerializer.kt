@@ -1,4 +1,4 @@
-package com.sharedsdk.serialization
+package com.gamedatahub.serialization
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json

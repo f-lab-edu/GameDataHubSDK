@@ -1,11 +1,9 @@
-package com.jvm.sdk.network
+package com.gamedatahub.network
 
-import com.sharedsdk.network.NetworkClient
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
-import java.io.Serial
 
 
 class JvmNetworkClient(

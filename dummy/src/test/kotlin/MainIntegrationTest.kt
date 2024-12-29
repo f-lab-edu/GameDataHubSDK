@@ -1,10 +1,8 @@
-import com.jvm.sdk.network.JvmNetworkClient
-import com.sharedsdk.datacollection.DataCollector
-import com.sharedsdk.serialization.JsonSerializer
+import com.gamedatahub.network.JvmNetworkClient
+import com.gamedatahub.datacollection.DataCollector
+import com.gamedatahub.serialization.JsonSerializer
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
