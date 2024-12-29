@@ -1,7 +1,6 @@
 import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.google.gson.Gson
 import java.io.IOException
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -15,7 +14,6 @@ class Perplexity(
     private val client: OkHttpClient = OkHttpClient()
 ) {
     private val requestUrl = "https://api.perplexity.ai/chat/completions"
-    private val gson = Gson()
     private val model = "llama-3.1-sonar-small-128k-online"
     private val objectMapper = ObjectMapper()
         .registerKotlinModule()
@@ -47,17 +45,16 @@ class Perplexity(
     }
 
     private fun createRequestBody(): String {
-        return gson.toJson(
-            mapOf(
-                "model" to model,
-                "messages" to listOf(
-                    mapOf(
-                        "role" to "system",
-                        "content" to prompt
-                    ),
-                    mapOf(
-                        "role" to "user",
-                        "content" to """
+        val requestBody = mapOf(
+            "model" to model,
+            "messages" to listOf(
+                mapOf(
+                    "role" to "system",
+                    "content" to prompt
+                ),
+                mapOf(
+                    "role" to "user",
+                    "content" to """
                              Generate realistic game user dummy data in JSON format. 
                             Each user should include the following attributes: 
                             - `name`: a unique username
@@ -67,10 +64,10 @@ class Perplexity(
                             - `achievements`: random list of 1-5 achievement titles
                             - `active`: boolean indicating whether the user is currently active
                         """.trimIndent()
-                    ),
-                    mapOf(
-                        "role" to "assistant",
-                        "content" to """
+                ),
+                mapOf(
+                    "role" to "assistant",
+                    "content" to """
                             {
                                 "name": "PlayerOne",
                                 "age": 25,
@@ -80,18 +77,18 @@ class Perplexity(
                                 "active": true
                             }
                         """.trimIndent()
-                    ),
-                    mapOf(
-                        "role" to "user",
-                        "content" to """
+                ),
+                mapOf(
+                    "role" to "user",
+                    "content" to """
                             Please generate another example of realistic game user data with randomized values. 
                             Provide a total of 10 unique examples in JSON format without any additional explanation or text, 
                             and ensure there are no enclosing backticks, special symbols, or unnecessary characters wrapping the content.
                         """.trimIndent()
-                    )
                 )
             )
         )
+        return objectMapper.writeValueAsString(requestBody)
     }
 }
 
