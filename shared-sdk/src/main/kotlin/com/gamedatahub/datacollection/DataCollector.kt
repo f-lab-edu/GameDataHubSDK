@@ -10,9 +10,9 @@ class DataCollector<T>(
     private val jsonSerializer: JsonSerializer<T>
 ) {
 
-    fun collect(serverUrl: String, data: T): Result<String> {
+    fun collect(serverUrl: String, data: T) {
         val jsonData = serializeToJson(data)
-        return networkClient.postData(serverUrl, jsonData)
+        networkClient.postDataAsync(serverUrl, jsonData)
     }
 
     private fun serializeToJson(data: T): String {
