@@ -1,5 +1,6 @@
 package com.gamedatahub.network
 
+import com.gamedatahub.network.handler.ErrorHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -14,7 +15,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class JvmNetworkClient(
-    private val client: OkHttpClient = OkHttpClient()
+    private val client: OkHttpClient = OkHttpClient(),
 ) : NetworkClient {
     private val scope = CoroutineScope(Dispatchers.IO)
 
@@ -24,7 +25,7 @@ class JvmNetworkClient(
                 val response = client.makePostRequest(url, data)
                 TODO("성공 핸들링")
             } catch (e: Exception) {
-                TODO("실패 핸들링")
+               throw e
             }
         }
     }
