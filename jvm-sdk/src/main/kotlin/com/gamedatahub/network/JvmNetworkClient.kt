@@ -1,62 +1,71 @@
 package com.gamedatahub.network
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import kotlinx.coroutines.suspendCancellableCoroutine
-import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
 import java.io.IOException
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
-class JvmNetworkClient(
-    private val client: OkHttpClient = OkHttpClient()
+data class NetworkClientConfig(
+    var isRetryEnabled: Boolean = true,
+    var maxRetries: Int = 2,
+    var retryDelayMillis: Long = 1000,
+    var backoffFactor: Double = 2.0
+)
+
+class JvmNetworkClient private constructor(
+    private val client: OkHttpClient,
+    val config: NetworkClientConfig,
 ) : NetworkClient {
-    private val scope = CoroutineScope(Dispatchers.IO)
 
     override fun postDataAsync(url: String, data: String) {
-        scope.launch {
-            try {
-                val response = client.makePostRequest(url, data)
-                TODO("성공 핸들링")
-            } catch (e: Exception) {
-                TODO("실패 핸들링")
+        client.makePostRequest(url, data)
+    }
+
+    private fun OkHttpClient.makePostRequest(url: String, data: String) {
+        val requestBody = data.toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        this.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("HTTP: ${response.code} - ${response.message}")
             }
         }
     }
-}
 
-private suspend fun OkHttpClient.makePostRequest(url: String, data: String): String {
-    val requestBody = data.toRequestBody("application/json".toMediaType())
-    val request = Request.Builder()
-        .url(url)
-        .post(requestBody)
-        .build()
+    class Builder {
+        private var client: OkHttpClient = OkHttpClient()
+        private var config: NetworkClientConfig = NetworkClientConfig()
 
-    return suspendCancellableCoroutine { continuation ->
-        val call = this.newCall(request)
+        private val yamlMapper: ObjectMapper = ObjectMapper(YAMLFactory())
+            .registerModule(KotlinModule())
 
-        call.enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
-                    continuation.resume(response.body?.string() ?: "")
+        fun loadFromYaml(filePath: String = "config.yml") =
+            apply {
+                val file = File(filePath)
+                config = if (!file.exists()) {
+                    NetworkClientConfig()
                 } else {
-                    continuation.resumeWithException(Exception("Error: ${response.code} - ${response.message}"))
+                    yamlMapper.readValue(file, NetworkClientConfig::class.java)
                 }
-                response.close()
             }
 
-            override fun onFailure(call: Call, e: IOException) {
-                continuation.resumeWithException(e)
-            }
-        })
+        fun httpClient(client: OkHttpClient) = apply { this.client = client }
+        fun enableRetry(isEnabled: Boolean) = apply { this.config = this.config.copy(isRetryEnabled = isEnabled) }
+        fun maxRetries(maxRetries: Int) = apply { this.config = this.config.copy(maxRetries = maxRetries) }
+        fun retryDelayMillis(delayMillis: Long) = apply { this.config = this.config.copy(retryDelayMillis = delayMillis) }
+        fun backoffFactor(factor: Double) = apply { this.config = this.config.copy(backoffFactor = factor) }
 
-        continuation.invokeOnCancellation {
-            call.cancel()
+        fun build(): JvmNetworkClient {
+            return JvmNetworkClient(client, config)
         }
     }
 }
