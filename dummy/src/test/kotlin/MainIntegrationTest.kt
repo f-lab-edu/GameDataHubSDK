@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import serialization.JacksonSerializer
+import java.io.File
 
 class MainIntegrationTest {
 
@@ -21,7 +22,7 @@ class MainIntegrationTest {
         mockWebServer = MockWebServer()
         mockWebServer.start()
 
-        networkClient = JvmNetworkClient()
+        networkClient = JvmNetworkClient.Builder().build()
         jsonSerializer = JacksonSerializer(clazz = User::class.java)
         dataCollector = DataCollector(networkClient, jsonSerializer)
     }
@@ -54,5 +55,34 @@ class MainIntegrationTest {
         assertEquals("/collect", request.path, "요청 경로가 올바르지 않습니다.")
         assertEquals("POST", request.method, "HTTP 메서드가 올바르지 않습니다.")
         assertTrue(request.body.readUtf8().contains("Test User"), "전송된 데이터가 올바르지 않습니다.")
+    }
+
+    @Test
+    fun `config yml 파일 설정이 제대로 적용된다`() {
+        val expectedEnabled = true
+        val expectedRetries = 3
+        val expectedDelayMillis = 2000L
+
+        val networkYml = """
+        isRetryEnabled: $expectedEnabled
+        maxRetries: $expectedRetries
+        retryDelayMillis: $expectedDelayMillis
+        backoffFactor: 1.5
+    """.trimIndent()
+
+        val configFile = File("network.yml")
+        configFile.writeText(networkYml)
+
+        val client = JvmNetworkClient.Builder()
+            .loadFromYaml("network.yml")
+            .build()
+
+        val config = client.config
+
+        assertEquals(expectedEnabled, config.isRetryEnabled, "재시도 설정이 올바르게 설정되지 않았습니다.")
+        assertEquals(expectedRetries, config.maxRetries, "재시도 횟수가 올바르게 설정되지 않았습니다.")
+        assertEquals(expectedDelayMillis, config.retryDelayMillis, "재시도 딜레이 값이 올바르게 설정되지 않았습니다.")
+
+        configFile.delete()
     }
 }
