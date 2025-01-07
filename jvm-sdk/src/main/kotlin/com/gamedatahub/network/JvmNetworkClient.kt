@@ -23,20 +23,12 @@ class JvmNetworkClient private constructor(
 ) : NetworkClient {
 
     override fun postDataAsync(url: String, data: String) {
-        client.makePostRequestAsync(url, data) { success, error ->
-            if (success != null) {
-                println("Request succeeded: $success")
-            } else {
-                println("Request failed: ${error?.message}")
-            }
-        }
+        client.makePostRequestAsync(url, data)
     }
-
 
     private fun OkHttpClient.makePostRequestAsync(
         url: String,
-        data: String,
-        callback: (success: String?, error: Throwable?) -> Unit
+        data: String
     ) {
         val requestBody = data.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
@@ -44,21 +36,26 @@ class JvmNetworkClient private constructor(
             .post(requestBody)
             .build()
 
+        val maxAttempts = config.maxRetries
+        var attempt = 0
+        var delay = config.retryDelayMillis
+
         this.newCall(request).enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
-                callback(null, e)
+                attempt++
+                if (attempt <= maxAttempts && config.isRetryEnabled) {
+                    Thread.sleep(delay)
+                    delay = (delay * config.backoffFactor).toLong()
+                    makePostRequestAsync(url, data)
+                } else {
+                    println("Request failed after ${attempt} attempts: ${e.message}")
+                }
             }
 
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 response.use {
-                    if (response.isSuccessful) {
-                        callback(response.body?.string(), null)
-                    } else {
-                        callback(
-                            null,
-                            IOException("HTTP ${response.code}: ${response.message}")
-                        )
-                    }
+                    if (!response.isSuccessful)
+                        onFailure(call, IOException("HTTP ${response.code}: ${response.message}"))
                 }
             }
         })
