@@ -11,10 +11,10 @@ import java.io.File
 import java.io.IOException
 
 data class NetworkClientConfig(
-    var isRetryEnabled: Boolean = true,
-    var maxRetries: Int = 2,
-    var retryDelayMillis: Long = 1000,
-    var backoffFactor: Double = 2.0
+    val isRetryEnabled: Boolean = true,
+    val maxRetries: Int = 2,
+    val retryDelayMillis: Long = 1000,
+    val backoffFactor: Double = 2.0
 )
 
 class JvmNetworkClient private constructor(
