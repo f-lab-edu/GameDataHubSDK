@@ -23,22 +23,45 @@ class JvmNetworkClient private constructor(
 ) : NetworkClient {
 
     override fun postDataAsync(url: String, data: String) {
-        client.makePostRequest(url, data)
+        client.makePostRequestAsync(url, data) { success, error ->
+            if (success != null) {
+                println("Request succeeded: $success")
+            } else {
+                println("Request failed: ${error?.message}")
+            }
+        }
     }
 
-    private fun OkHttpClient.makePostRequest(url: String, data: String) {
-        val requestBody = data.toRequestBody("application/json".toMediaType())
 
+    private fun OkHttpClient.makePostRequestAsync(
+        url: String,
+        data: String,
+        callback: (success: String?, error: Throwable?) -> Unit
+    ) {
+        val requestBody = data.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
             .url(url)
             .post(requestBody)
             .build()
 
-        this.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw IOException("HTTP: ${response.code} - ${response.message}")
+        this.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                callback(null, e)
             }
-        }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                response.use {
+                    if (response.isSuccessful) {
+                        callback(response.body?.string(), null)
+                    } else {
+                        callback(
+                            null,
+                            IOException("HTTP ${response.code}: ${response.message}")
+                        )
+                    }
+                }
+            }
+        })
     }
 
     class Builder {
