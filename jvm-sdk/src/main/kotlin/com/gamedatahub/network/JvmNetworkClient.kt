@@ -11,8 +11,8 @@ import java.io.File
 import java.io.IOException
 
 data class NetworkClientConfig(
-    val isRetryEnabled: Boolean = true,
-    val maxRetries: Int = 2,
+    val isRetryEnabled: Boolean = false,
+    val maxRetries: Int = 1,
     val retryDelayMillis: Long = 1000,
     val backoffFactor: Double = 2.0
 )
@@ -28,7 +28,8 @@ class JvmNetworkClient private constructor(
 
     private fun OkHttpClient.makePostRequestAsync(
         url: String,
-        data: String
+        data: String,
+        attempt: Int = 0
     ) {
         val requestBody = data.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
@@ -37,18 +38,18 @@ class JvmNetworkClient private constructor(
             .build()
 
         val maxAttempts = config.maxRetries
-        var attempt = 0
         var delay = config.retryDelayMillis
 
         this.newCall(request).enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
-                attempt++
-                if (attempt <= maxAttempts && config.isRetryEnabled) {
+                var tmpAttempt = attempt
+                tmpAttempt++
+                if (tmpAttempt <= maxAttempts && config.isRetryEnabled) {
                     Thread.sleep(delay)
                     delay = (delay * config.backoffFactor).toLong()
-                    makePostRequestAsync(url, data)
+                    makePostRequestAsync(url, data, tmpAttempt)
                 } else {
-                    println("Request failed after ${attempt} attempts: ${e.message}")
+                    println("Request failed after ${tmpAttempt} attempts: ${e.message}")
                 }
             }
 
