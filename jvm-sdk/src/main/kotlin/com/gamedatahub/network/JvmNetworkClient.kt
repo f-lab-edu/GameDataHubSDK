@@ -11,10 +11,10 @@ import java.io.File
 import java.io.IOException
 
 data class NetworkClientConfig(
-    var isRetryEnabled: Boolean = true,
-    var maxRetries: Int = 2,
-    var retryDelayMillis: Long = 1000,
-    var backoffFactor: Double = 2.0
+    val isRetryEnabled: Boolean = false,
+    val maxRetries: Int = 1,
+    val retryDelayMillis: Long = 1000,
+    val backoffFactor: Double = 2.0
 )
 
 class JvmNetworkClient private constructor(
@@ -23,22 +23,43 @@ class JvmNetworkClient private constructor(
 ) : NetworkClient {
 
     override fun postDataAsync(url: String, data: String) {
-        client.makePostRequest(url, data)
+        client.makePostRequestAsync(url, data)
     }
 
-    private fun OkHttpClient.makePostRequest(url: String, data: String) {
+    private fun OkHttpClient.makePostRequestAsync(
+        url: String,
+        data: String,
+        attempt: Int = 0
+    ) {
         val requestBody = data.toRequestBody("application/json".toMediaType())
-
         val request = Request.Builder()
             .url(url)
             .post(requestBody)
             .build()
 
-        this.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw IOException("HTTP: ${response.code} - ${response.message}")
+        val maxAttempts = config.maxRetries
+        var delay = config.retryDelayMillis
+
+        this.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                var tmpAttempt = attempt
+                tmpAttempt++
+                if (tmpAttempt <= maxAttempts && config.isRetryEnabled) {
+                    Thread.sleep(delay)
+                    delay = (delay * config.backoffFactor).toLong()
+                    makePostRequestAsync(url, data, tmpAttempt)
+                } else {
+                    println("Request failed after ${tmpAttempt} attempts: ${e.message}")
+                }
             }
-        }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                response.use {
+                    if (!response.isSuccessful)
+                        onFailure(call, IOException("HTTP ${response.code}: ${response.message}"))
+                }
+            }
+        })
     }
 
     class Builder {
