@@ -66,8 +66,9 @@ class JvmNetworkClient private constructor(
         private var client: OkHttpClient = OkHttpClient()
         private var config: NetworkClientConfig = NetworkClientConfig()
 
-        private val yamlMapper: ObjectMapper = ObjectMapper(YAMLFactory())
-            .registerModule(KotlinModule())
+        private val yamlMapper: ObjectMapper by lazy {
+            ObjectMapper(YAMLFactory()).registerModule(KotlinModule())
+        }
 
         fun loadFromYaml(filePath: String = "config.yml") =
             apply {
