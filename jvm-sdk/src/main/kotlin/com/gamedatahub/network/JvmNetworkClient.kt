@@ -45,7 +45,6 @@ class JvmNetworkClient private constructor(
                 var tmpAttempt = attempt
                 tmpAttempt++
                 if (tmpAttempt <= maxAttempts && config.isRetryEnabled) {
-                    Thread.sleep(delay)
                     delay = (delay * config.backoffFactor).toLong()
                     makePostRequestAsync(url, data, tmpAttempt)
                 } else {
