@@ -27,8 +27,6 @@ class MainIntegrationTest {
         networkClient = JvmNetworkClient.Builder()
             .enableRetry(true)
             .maxRetries(3)
-            .retryDelayMillis(10)
-            .backoffFactor(2.0)
             .build()
         jsonSerializer = JacksonSerializer(clazz = User::class.java)
         dataCollector = DataCollector(networkClient, jsonSerializer)
@@ -88,7 +86,6 @@ class MainIntegrationTest {
 
         assertEquals(expectedEnabled, config.isRetryEnabled, "재시도 설정이 올바르게 설정되지 않았습니다.")
         assertEquals(expectedRetries, config.maxRetries, "재시도 횟수가 올바르게 설정되지 않았습니다.")
-        assertEquals(expectedDelayMillis, config.retryDelayMillis, "재시도 딜레이 값이 올바르게 설정되지 않았습니다.")
 
         configFile.delete()
     }

@@ -13,8 +13,6 @@ import java.io.IOException
 data class NetworkClientConfig(
     val isRetryEnabled: Boolean = false,
     val maxRetries: Int = 1,
-    val retryDelayMillis: Long = 1000,
-    val backoffFactor: Double = 2.0
 )
 
 class JvmNetworkClient private constructor(
@@ -38,14 +36,12 @@ class JvmNetworkClient private constructor(
             .build()
 
         val maxAttempts = config.maxRetries
-        var delay = config.retryDelayMillis
 
         this.newCall(request).enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
                 var tmpAttempt = attempt
                 tmpAttempt++
                 if (tmpAttempt <= maxAttempts && config.isRetryEnabled) {
-                    delay = (delay * config.backoffFactor).toLong()
                     makePostRequestAsync(url, data, tmpAttempt)
                 } else {
                     println("Request failed after ${tmpAttempt} attempts: ${e.message}")
@@ -82,8 +78,6 @@ class JvmNetworkClient private constructor(
         fun httpClient(client: OkHttpClient) = apply { this.client = client }
         fun enableRetry(isEnabled: Boolean) = apply { this.config = this.config.copy(isRetryEnabled = isEnabled) }
         fun maxRetries(maxRetries: Int) = apply { this.config = this.config.copy(maxRetries = maxRetries) }
-        fun retryDelayMillis(delayMillis: Long) = apply { this.config = this.config.copy(retryDelayMillis = delayMillis) }
-        fun backoffFactor(factor: Double) = apply { this.config = this.config.copy(backoffFactor = factor) }
 
         fun build(): JvmNetworkClient {
             return JvmNetworkClient(client, config)
